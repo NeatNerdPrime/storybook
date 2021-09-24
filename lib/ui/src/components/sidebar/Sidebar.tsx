@@ -1,9 +1,9 @@
-import { DOCS_MODE } from 'global';
+import global from 'global';
 import React, { FunctionComponent, useMemo } from 'react';
 
 import { styled } from '@storybook/theming';
 import { ScrollArea, Spaced } from '@storybook/components';
-import { StoriesHash, State } from '@storybook/api';
+import type { StoriesHash, State } from '@storybook/api';
 
 import { Heading } from './Heading';
 
@@ -13,6 +13,8 @@ import { Search } from './Search';
 import { SearchResults } from './SearchResults';
 import { Refs, CombinedDataset, Selection } from './types';
 import { useLastViewed } from './useLastViewed';
+
+const { DOCS_MODE } = global;
 
 const Container = styled.nav({
   position: 'absolute',
@@ -105,21 +107,34 @@ export const Sidebar: FunctionComponent<SidebarProps> = React.memo(
     );
     const dataset = useCombination(stories, storiesConfigured, storiesFailed, refs);
     const isLoading = !dataset.hash[DEFAULT_REF_ID].ready;
-    const lastViewed = useLastViewed(selected);
+    const lastViewedProps = useLastViewed(selected);
 
     return (
       <Container className="container sidebar-container">
         <CustomScrollArea vertical>
           <StyledSpaced row={1.6}>
-            <Heading className="sidebar-header" menuHighlighted={menuHighlighted} menu={menu} />
+            <Heading
+              className="sidebar-header"
+              menuHighlighted={menuHighlighted}
+              menu={menu}
+              skipLinkHref="#storybook-preview-wrapper"
+            />
 
             <Search
               dataset={dataset}
               isLoading={isLoading}
               enableShortcuts={enableShortcuts}
-              {...lastViewed}
+              {...lastViewedProps}
             >
-              {({ query, results, isBrowsing, getMenuProps, getItemProps, highlightedIndex }) => (
+              {({
+                query,
+                results,
+                isBrowsing,
+                closeMenu,
+                getMenuProps,
+                getItemProps,
+                highlightedIndex,
+              }) => (
                 <Swap condition={isBrowsing}>
                   <Explorer
                     dataset={dataset}
@@ -130,9 +145,12 @@ export const Sidebar: FunctionComponent<SidebarProps> = React.memo(
                   <SearchResults
                     query={query}
                     results={results}
+                    closeMenu={closeMenu}
                     getMenuProps={getMenuProps}
                     getItemProps={getItemProps}
                     highlightedIndex={highlightedIndex}
+                    enableShortcuts={enableShortcuts}
+                    isLoading={isLoading}
                   />
                 </Swap>
               )}
